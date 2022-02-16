@@ -6,14 +6,14 @@ use regex::Regex;
 
 use crate::Alignment;
 
-/// Columns layout
+/// Dynamic columns layout.
 pub struct Layout {
     left: Vec<Col>,
     fill: Option<Col>,
     right: Vec<Col>,
 }
 
-/// calculated layout column
+// calculated layout column
 #[derive(Debug)]
 pub struct Column {
     width: usize,
@@ -21,7 +21,14 @@ pub struct Column {
 }
 
 impl Layout {
-    /// Creates a new blank layout
+    /// Creates a new blank layout.
+    ///
+    /// You need to add columns to the resulting layout
+    /// with [Layout::fractional] or [Layout::fixed] before you can use it.
+    ///
+    /// # Example
+    ///
+    /// TODO
     pub fn new() -> Self {
         Self {
             left: Vec::new(),
@@ -30,13 +37,27 @@ impl Layout {
         }
     }
 
-    /// The default layout (pattern `<*`)
+    /// The default layout.
+    ///
+    /// Accept any number of columns, each one with a width
+    /// of 1 fractional unit and aligned to the left.
     pub fn default() -> Self {
         Self::new().fractional(1, crate::Alignment::LEFT).repeat()
     }
 
-    /// Creates a layout from a pattern
-    pub fn from_pattern(pattern: &str) -> Self {
+    /// Creates a layout from a pattern.
+    ///
+    /// TODO
+    ///
+    /// # Pattern Syntax
+    ///
+    /// TODO
+    ///
+    /// # Examples
+    ///
+    /// TODO
+    ///
+    pub fn from_pattern(pattern: &str) -> Result<Self, String> {
         lazy_static! {
             static ref RE_COLUMN: Regex = Regex::new(r"^([<^>=]?)(-*|\d*)(\*?)$").unwrap();
             static ref RE_DASHES: Regex = Regex::new(r"^-+$").unwrap();
@@ -44,39 +65,44 @@ impl Layout {
 
         let mut parsed = Self::new();
         for column_pattern in pattern.split(" ") {
-            let groups = RE_COLUMN.captures(column_pattern).expect(&format!(
-                "Invalid column \"{}\" in pattern \"{}\"",
-                column_pattern, pattern
-            ));
-            println!("{:?}", groups);
-            if groups.get(0).unwrap().as_str().is_empty() {
-                // skips multiple spaces
-                continue;
-            }
+            match RE_COLUMN.captures(column_pattern) {
+                None => {
+                    return Err(format!(
+                        "Invalid column \"{}\" in pattern \"{}\"",
+                        column_pattern, pattern
+                    ))
+                }
+                Some(groups) => {
+                    if groups.get(0).unwrap().as_str().is_empty() {
+                        // skips multiple spaces
+                        continue;
+                    }
 
-            let align = match groups.get(1).unwrap().as_str() {
-                "^" => crate::Alignment::CENTER,
-                ">" => crate::Alignment::RIGHT,
-                "=" => crate::Alignment::JUSTIFY,
-                // default alignment is left
-                &_ => crate::Alignment::LEFT,
-            };
+                    let align = match groups.get(1).unwrap().as_str() {
+                        "^" => crate::Alignment::CENTER,
+                        ">" => crate::Alignment::RIGHT,
+                        "=" => crate::Alignment::JUSTIFY,
+                        // default alignment is left
+                        &_ => crate::Alignment::LEFT,
+                    };
 
-            let size = groups.get(2).unwrap().as_str();
-            if size.is_empty() {
-                // default column size is 1fr
-                parsed = parsed.fractional(1, align);
-            } else if RE_DASHES.is_match(size) {
-                parsed = parsed.fractional(size.len(), align);
-            } else {
-                parsed = parsed.fixed(size.parse::<usize>().unwrap(), align);
-            }
+                    let size = groups.get(2).unwrap().as_str();
+                    if size.is_empty() {
+                        // default column size is 1fr
+                        parsed = parsed.fractional(1, align);
+                    } else if RE_DASHES.is_match(size) {
+                        parsed = parsed.fractional(size.len(), align);
+                    } else {
+                        parsed = parsed.fixed(size.parse::<usize>().unwrap(), align);
+                    }
 
-            if groups.get(3).unwrap().as_str() == "*" {
-                parsed = parsed.repeat();
+                    if groups.get(3).unwrap().as_str() == "*" {
+                        parsed = parsed.repeat();
+                    }
+                }
             }
         }
-        return parsed;
+        return Ok(parsed);
     }
 
     /// Add a fractional-sized column

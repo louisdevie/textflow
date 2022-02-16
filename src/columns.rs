@@ -1,7 +1,7 @@
 use crate::Layout;
 use crate::Spacing;
 
-/// Wraps and align text withi columns.
+/// Wraps and aligns text within columns.
 pub fn columns<'a, Strings>(
     content: Strings,
     _spacing: Spacing,

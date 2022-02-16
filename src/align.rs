@@ -2,7 +2,7 @@ extern crate textwrap;
 
 use crate::Alignment;
 
-/// Wraps and align the given `text`.
+/// Wraps and aligns text.
 ///
 /// `width_or_options` can either be an integer or [textwrap::Options],
 ///  see `textwrap`'s documentation for more information.
@@ -48,7 +48,8 @@ where
 {
     let options = width_or_options.into();
 
-    // copy the width before passing the options to `wrap`
+    // copy the width before passing the options
+    // to `wrap` because it consumes it
     let width = options.width;
 
     let wrapped = textwrap::wrap(text, options);
@@ -56,35 +57,47 @@ where
     let mut wrapped_and_aligned = String::new();
 
     for (i, line) in wrapped.iter().enumerate() {
-        if i != 0 {
+        let last_line = i == wrapped.len() - 1;
+        wrapped_and_aligned.push_str(&align_line(line, width, alignment, last_line));
+        // no line feed at the end
+        if !last_line {
             wrapped_and_aligned.push('\n');
         }
-        wrapped_and_aligned.push_str(&align_line(line, width, alignment, i == wrapped.len() - 1));
     }
 
     return wrapped_and_aligned;
 }
 
+// that's where the magic happens
 fn align_line(line: &str, width: usize, alignment: Alignment, last: bool) -> String {
     let remaining = width - line.len();
 
     match alignment {
+        // return the line as is
         Alignment::LEFT => String::from(line),
 
+        // pad the line with spaces
         Alignment::RIGHT => " ".repeat(remaining) + line,
 
+        // half-pad the line
         Alignment::CENTER => " ".repeat(remaining / 2) + line,
 
+        // now the complicated stuff
         Alignment::JUSTIFY => {
-            if !last {
+            if last {
+                // the last line doesn't get justified
+                String::from(line)
+            } else {
                 let mut words: Vec<&str> = line.split(" ").collect();
                 let spaces =
                     crate::utils::split_evenly(words.len() + remaining - 1, words.len() - 1);
 
-                // `remove(0)` panics if the vector is empty
+                // the first word is treated separately
                 let mut aligned = if words.len() != 0 {
+                    // `remove(0)` will panics if the vector is empty ...
                     String::from(words.remove(0))
                 } else {
+                    // ... it means the line is empty so we return an empty string
                     String::new()
                 };
                 for (word, spacing) in words.iter().zip(spaces) {
@@ -93,8 +106,6 @@ fn align_line(line: &str, width: usize, alignment: Alignment, last: bool) -> Str
                 }
 
                 aligned
-            } else {
-                String::from(line)
             }
         }
     }
