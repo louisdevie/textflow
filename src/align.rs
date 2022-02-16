@@ -1,5 +1,7 @@
 extern crate textwrap;
 
+use crate::Alignment;
+
 /// Wraps and align the given `text`.
 ///
 /// `width_or_options` can either be an integer or [textwrap::Options],
@@ -35,7 +37,7 @@ extern crate textwrap;
 /// The crate also contains [an example](https://github.com/louisdevie/textflow/blob/main/examples/alignment.rs).
 pub fn align<'a, TextwrapAlgo, TextwrapWordSep, TextwrapWordSplit, TextwrapOptions>(
     text: &str,
-    alignment: super::Alignment,
+    alignment: Alignment,
     width_or_options: TextwrapOptions,
 ) -> String
 where
@@ -63,20 +65,21 @@ where
     return wrapped_and_aligned;
 }
 
-fn align_line(line: &str, width: usize, alignment: super::Alignment, last: bool) -> String {
+fn align_line(line: &str, width: usize, alignment: Alignment, last: bool) -> String {
     let remaining = width - line.len();
 
     match alignment {
-        super::Alignment::LEFT => String::from(line),
+        Alignment::LEFT => String::from(line),
 
-        super::Alignment::RIGHT => " ".repeat(remaining) + line,
+        Alignment::RIGHT => " ".repeat(remaining) + line,
 
-        super::Alignment::CENTER => " ".repeat(remaining / 2) + line,
+        Alignment::CENTER => " ".repeat(remaining / 2) + line,
 
-        super::Alignment::JUSTIFY => {
+        Alignment::JUSTIFY => {
             if !last {
                 let mut words: Vec<&str> = line.split(" ").collect();
-                let spaces = split_evenly(words.len() + remaining - 1, words.len() - 1);
+                let spaces =
+                    crate::utils::split_evenly(words.len() + remaining - 1, words.len() - 1);
 
                 // `remove(0)` panics if the vector is empty
                 let mut aligned = if words.len() != 0 {
@@ -95,18 +98,4 @@ fn align_line(line: &str, width: usize, alignment: super::Alignment, last: bool)
             }
         }
     }
-}
-
-fn split_evenly(number: usize, into: usize) -> Vec<usize> {
-    let mut steps: Vec<usize> = Vec::new();
-    for i in 0..(into + 1) {
-        steps.push((i as f32 * (number as f32 / into as f32)).round() as usize);
-    }
-
-    let mut deltas = Vec::new();
-    for i in 0..into {
-        deltas.push(steps[i + 1] - steps[i]);
-    }
-
-    return deltas;
 }

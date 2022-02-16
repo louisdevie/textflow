@@ -15,8 +15,13 @@ pub use align::align;
 mod columns;
 pub use columns::columns;
 
+mod layout;
+pub use layout::Layout;
+
+mod utils;
+
 /// Text alignment. See [align()] for details.
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum Alignment {
     /// Left-aligned
     LEFT,
@@ -26,4 +31,15 @@ pub enum Alignment {
     RIGHT,
     /// Justified
     JUSTIFY,
+}
+
+/// Column spacing. See [columns()] for details.
+#[derive(Copy, Clone, Debug)]
+pub enum Spacing {
+    /// No spacing
+    NONE,
+    /// Space between columns
+    BETWEEN,
+    /// Space between and around columns
+    AROUND,
 }
