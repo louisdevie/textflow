@@ -26,14 +26,17 @@ jobs:
         components: llvm-tools-preview
 
     # runs cargo with defaults flags, using the default `lcov` output
-    - name: Run tests
-      run: RUSTFLAGS="-C instrument-coverage" LLVM_PROFILE_FILE="json5format-%m.profraw" cargo test --lib
+    #- name: Run tests
+    #  run: RUSTFLAGS="-C instrument-coverage" LLVM_PROFILE_FILE="json5format-%m.profraw" cargo test --lib
       
-    - name: Measure coverage
-      run: cargo profdata merge -sparse json5format-*.profraw -o json5format.profdata
-         | cargo cov report --use-color --ignore-filename-regex='/.cargo/registry' --instr-profile=json5format.profdata --object target/debug/deps/lib-*
+    - name: DEBUG
+      run: ls `rustc --print target-libdir`
+      
+    #- name: Measure coverage
+    #  run: cargo profdata merge -sparse json5format-*.profraw -o json5format.profdata
+    #     | cargo cov report --use-color --ignore-filename-regex='/.cargo/registry' --instr-profile=json5format.profdata --object target/debug/deps/lib-*
 
     # afterwards, upload the report to codecov 
-    - uses: codecov/codecov-action@v1
-      with:
-        directory: coverage
+    #- uses: codecov/codecov-action@v1
+    #  with:
+    #    directory: coverage
