@@ -16,8 +16,8 @@ pub struct Layout {
 // calculated layout column
 #[derive(Debug)]
 pub struct Column {
-    width: usize,
-    alignment: Alignment,
+    pub width: usize,
+    pub alignment: Alignment,
 }
 
 impl Layout {
@@ -68,7 +68,7 @@ impl Layout {
             match RE_COLUMN.captures(column_pattern) {
                 None => {
                     return Err(format!(
-                        "Invalid column \"{}\" in pattern \"{}\"",
+                        "Invalid column [{}] in pattern [{}]",
                         column_pattern, pattern
                     ))
                 }

@@ -1,5 +1,3 @@
-extern crate textwrap;
-
 use crate::Alignment;
 
 /// Wraps and aligns text.
@@ -69,7 +67,7 @@ where
 }
 
 // that's where the magic happens
-fn align_line(line: &str, width: usize, alignment: Alignment, last: bool) -> String {
+pub fn align_line(line: &str, width: usize, alignment: Alignment, last: bool) -> String {
     let remaining = width - line.len();
 
     match alignment {

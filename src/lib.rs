@@ -18,7 +18,7 @@ pub use columns::columns;
 mod layout;
 pub use layout::Layout;
 
-mod utils;
+pub mod utils;
 
 /// Text alignment. See [align()] for details.
 #[derive(Copy, Clone, Debug)]

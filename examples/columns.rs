@@ -5,7 +5,7 @@ use textflow::Alignment::*;
 use textflow::Layout;
 use textflow::Spacing::*;
 
-fn main() {
+fn main() -> Result<(), String> {
     let text1 = "First";
     let text2 = "Second";
     let text3 = "Third";
@@ -20,7 +20,7 @@ fn main() {
     println!("\n\nMIRRORED =======================================\n");
     println!(
         "{}",
-        columns([text1, text2], BETWEEN, Layout::from_pattern("> <"), 48)
+        columns([text1, text2], BETWEEN, Layout::from_pattern("> <")?, 48)
     );
 
     println!("\n\nFIXED WIDTH COLUMN =============================\n");
@@ -29,7 +29,7 @@ fn main() {
         columns(
             [text1, text2, text3],
             AROUND,
-            Layout::from_pattern("20 *"),
+            Layout::from_pattern("20 *")?,
             48
         )
     );
@@ -40,7 +40,7 @@ fn main() {
         columns(
             [text1, text2, text3, text4],
             AROUND,
-            Layout::from_pattern("=- ^15* >--"),
+            Layout::from_pattern("=- ^15* >--")?,
             48
         )
     );
@@ -55,4 +55,6 @@ fn main() {
         "{}",
         columns([text1, text2, text3, text4], AROUND, my_layout, 48)
     );
+
+    Ok(())
 }
