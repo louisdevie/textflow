@@ -6,42 +6,45 @@ use textflow::Layout;
 use textflow::Spacing::*;
 
 fn main() -> Result<(), String> {
-    let text1 = "First";
-    let text2 = "Second";
-    let text3 = "Third";
-    let text4 = "Fourth";
+    let text1 = "The November sky above was blue.";
+    let text2 =
+        "It was mid-November, the time when the season of changing leaves was drawing to a close;";
+    let text3 =
+        "midday was wrapped in a pleasant coolness and breakfast brought adopted a sharp chill.";
+    let roles = "Tōma Kamijō\nAccelerator\nMikoto Misaka";
+    let actors = "Atsushi Abe\nNobuhiko Okamoto\nRina Satō";
 
-    println!("BASIC ==========================================\n");
+    println!("BASIC ======================================================\n");
     println!(
         "{}",
-        columns([text1, text2, text3], BETWEEN, Layout::default(), 48)
+        columns([text1, text2, text3], BETWEEN, Layout::default(), 60)
     );
 
-    println!("\n\nMIRRORED =======================================\n");
+    println!("\n\nMIRRORED =================================================\n");
     println!(
         "{}",
-        columns([text1, text2], BETWEEN, Layout::from_pattern("> <")?, 48)
+        columns([roles, actors], BETWEEN, Layout::from_pattern("> <")?, 60)
     );
 
-    println!("\n\nFIXED WIDTH COLUMN =============================\n");
+    println!("\n\nFIXED WIDTH COLUMN =========================================\n");
     println!(
         "{}",
         columns(
             [text1, text2, text3],
             AROUND,
-            Layout::from_pattern("20 *")?,
-            48
+            Layout::from_pattern("16 *")?,
+            60
         )
     );
 
-    println!("\n\nCOMPLEX PATTERN ==================================\n");
+    println!("\n\nCOMPLEX PATTERN ============================================\n");
     println!(
         "{}",
         columns(
-            [text1, text2, text3, text4],
-            AROUND,
+            [text1, text2, text3],
+            BETWEEN,
             Layout::from_pattern("=- ^15* >--")?,
-            48
+            60
         )
     );
 
@@ -50,11 +53,8 @@ fn main() -> Result<(), String> {
         .fixed(15, CENTER)
         .repeat()
         .fractional(2, RIGHT);
-    println!("\n\nSAME LAYOUT, DIFFERENT CONSTRUCTOR =============\n");
-    println!(
-        "{}",
-        columns([text1, text2, text3, text4], AROUND, my_layout, 48)
-    );
+    println!("\n\nSAME LAYOUT, DIFFERENT CONSTRUCTOR =========================\n");
+    println!("{}", columns([text1, text2, text3], BETWEEN, my_layout, 60));
 
     Ok(())
 }

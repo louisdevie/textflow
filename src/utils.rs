@@ -1,9 +1,4 @@
-//! DOC
-//!
-//! RM: THIS CRATE SHOULD NOT BE PUBLIC
-
 // divides `number` into `into` integer parts the most evenly possible
-/// DOC
 pub fn split_evenly(number: usize, into: usize) -> Vec<usize> {
     // steps from 0 to `number`, separated by `number`/`into`
     // rounded to the nearest integer
@@ -21,7 +16,7 @@ pub fn split_evenly(number: usize, into: usize) -> Vec<usize> {
     return deltas;
 }
 
-/// DOC
+// creates new options for textwrap
 pub fn copy_textwrap_options<'a, TextwrapAlgo, TextwrapWordSep, TextwrapWordSplit>(
     original: &'a textwrap::Options<'a, TextwrapAlgo, TextwrapWordSep, TextwrapWordSplit>,
     new_width: usize,
@@ -37,7 +32,7 @@ where
         .wrap_algorithm(original.wrap_algorithm.clone())
 }
 
-/// DOC
+// invert a 2-dimensional vector
 pub fn invert_2d_vec<T>(v: &mut Vec<Vec<T>>)
 where
     Vec<T>: Clone,
@@ -68,14 +63,36 @@ where
     // swap the values
     for i in 0..(size - 1) {
         for j in (1 + i)..(size) {
-            swap_2d_vec(&mut v, (i, j), (j, i));
+            swap_2d_vec(v, (i, j), (j, i));
+        }
+    }
+
+    // truncate the vector
+    if height > width {
+        v.truncate(width)
+    } else {
+        for u in v.iter_mut() {
+            u.truncate(height);
         }
     }
 }
 
+// swaps two values in a vector
 fn swap_2d_vec<T>(v: &mut Vec<Vec<T>>, pos1: (usize, usize), pos2: (usize, usize))
 where
     T: Default,
 {
     let mut temp = T::default();
+    std::mem::swap(&mut v[pos1.0][pos1.1], &mut temp);
+    std::mem::swap(&mut v[pos2.0][pos2.1], &mut temp);
+    std::mem::swap(&mut v[pos1.0][pos1.1], &mut temp);
+}
+
+// space to allocate for spacing
+pub fn spacing_needed(spacing: crate::Spacing, columns: usize) -> usize {
+    match spacing {
+        crate::Spacing::NONE => 0,
+        crate::Spacing::BETWEEN => columns - 1,
+        crate::Spacing::AROUND => columns + 1,
+    }
 }

@@ -4,21 +4,23 @@
 //! that lets you print text in columns, aligned to the right, centered
 //! or justified.
 
+extern crate lazy_static;
+extern crate regex;
 extern crate textwrap;
+extern crate unicode_width;
 
 /// (re-exported from `textwrap`) Holds settings for wrapping and filling text.
 pub use textwrap::Options;
 
+mod utils;
+
 mod align;
-pub use align::align;
-
 mod columns;
-pub use columns::columns;
-
 mod layout;
-pub use layout::Layout;
 
-pub mod utils;
+pub use align::align;
+pub use columns::columns;
+pub use layout::Layout;
 
 /// Text alignment. See [align()] for details.
 #[derive(Copy, Clone, Debug)]

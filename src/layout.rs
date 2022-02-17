@@ -1,10 +1,8 @@
-extern crate lazy_static;
-extern crate regex;
-
-use lazy_static::lazy_static;
-use regex::Regex;
+use crate::utils::*;
 
 use crate::Alignment;
+use lazy_static::lazy_static;
+use regex::Regex;
 
 /// Dynamic columns layout.
 pub struct Layout {
@@ -199,7 +197,7 @@ impl Layout {
 
             let mut resolved = Vec::new();
 
-            let mut fractional_columns = crate::utils::split_evenly(remaining, fractions);
+            let mut fractional_columns = split_evenly(remaining, fractions);
             for col in expanded {
                 match col.unit {
                     ColWidthUnit::CHARACTER => resolved.push(Column {

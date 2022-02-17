@@ -17,3 +17,4 @@ categories = ["command-line-interface"]
 textwrap = "0.14"
 regex = "1"
 lazy_static = "1.4"
+unicode-width = ">=0.1.9"

@@ -1,9 +1,12 @@
+use crate::utils::*;
+
 use crate::Alignment;
+use unicode_width::UnicodeWidthStr as UniW;
 
 /// Wraps and aligns text.
 ///
 /// `width_or_options` can either be an integer or [textwrap::Options],
-///  see `textwrap`'s documentation for more information.
+///  see the documentation of [`textwrap`]() for more information.
 ///
 /// There are four alignment modes :
 /// * `LEFT` doesn't modifiy the text, so it ends up left-aligned
@@ -66,29 +69,32 @@ where
     return wrapped_and_aligned;
 }
 
-// that's where the magic happens
+// real deal
 pub fn align_line(line: &str, width: usize, alignment: Alignment, last: bool) -> String {
-    let remaining = width - line.len();
+    let remaining = width - UniW::width(line);
 
     match alignment {
-        // return the line as is
-        Alignment::LEFT => String::from(line),
+        // pad at the end (useful for `columns`)
+        Alignment::LEFT => String::from(line) + &" ".repeat(remaining),
 
-        // pad the line with spaces
+        // pad at the start
         Alignment::RIGHT => " ".repeat(remaining) + line,
 
-        // half-pad the line
-        Alignment::CENTER => " ".repeat(remaining / 2) + line,
+        // pad each side (again, the padding at the end is useful for `columns`)
+        Alignment::CENTER => {
+            let before = remaining / 2;
+            " ".repeat(before) + line + &" ".repeat(remaining - before)
+        }
 
-        // now the complicated stuff
+        // now onto the complicated stuff
         Alignment::JUSTIFY => {
             if last {
                 // the last line doesn't get justified
-                String::from(line)
+                String::from(line) + &" ".repeat(remaining)
             } else {
                 let mut words: Vec<&str> = line.split(" ").collect();
-                let spaces =
-                    crate::utils::split_evenly(words.len() + remaining - 1, words.len() - 1);
+                // distribute spaces
+                let spaces = split_evenly(words.len() + remaining - 1, words.len() - 1);
 
                 // the first word is treated separately
                 let mut aligned = if words.len() != 0 {
@@ -98,9 +104,14 @@ pub fn align_line(line: &str, width: usize, alignment: Alignment, last: bool) ->
                     // ... it means the line is empty so we return an empty string
                     String::new()
                 };
-                for (word, spacing) in words.iter().zip(spaces) {
-                    aligned.push_str(&" ".repeat(spacing));
-                    aligned.push_str(word);
+                if words.len() == 0 {
+                    // only one word
+                    aligned.push_str(&" ".repeat(remaining));
+                } else {
+                    for (word, spacing) in words.iter().zip(spaces) {
+                        aligned.push_str(&" ".repeat(spacing));
+                        aligned.push_str(word);
+                    }
                 }
 
                 aligned
