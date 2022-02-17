@@ -46,7 +46,7 @@ jobs:
           done \
         ) \
         --instr-profile=json5format.profdata
+        
+    - run: ls .
 
     - uses: codecov/codecov-action@v1
-      with:
-        directory: coverage
