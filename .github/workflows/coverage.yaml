@@ -30,7 +30,7 @@ jobs:
     #  run: RUSTFLAGS="-C instrument-coverage" LLVM_PROFILE_FILE="json5format-%m.profraw" cargo test --lib
       
     - name: DEBUG
-      run: ls -r ~
+      run: ls -R ~
       
     #- name: Measure coverage
     #  run: cargo profdata merge -sparse json5format-*.profraw -o json5format.profdata
