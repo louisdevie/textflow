@@ -27,11 +27,11 @@ jobs:
 
     # runs cargo with defaults flags, using the default `lcov` output
     - name: Run tests
-      run: RUSTFLAGS="-Z instrument-coverage" LLVM_PROFILE_FILE="json5format-%m.profraw" cargo test --lib
+      run: RUSTFLAGS="-C instrument-coverage" LLVM_PROFILE_FILE="json5format-%m.profraw" cargo test --lib
       
     - name: Measure coverage
-      run: llvm-profdata merge -sparse json5format-*.profraw -o json5format.profdata
-         | llvm-cov report --use-color --ignore-filename-regex='/.cargo/registry' --instr-profile=json5format.profdata --object target/debug/deps/lib-*
+      run: cargo profdata merge -sparse json5format-*.profraw -o json5format.profdata
+         | cargo cov report --use-color --ignore-filename-regex='/.cargo/registry' --instr-profile=json5format.profdata --object target/debug/deps/lib-*
 
     # afterwards, upload the report to codecov 
     - uses: codecov/codecov-action@v1
