@@ -30,9 +30,11 @@ jobs:
     - name: Run tests
       run: RUSTFLAGS="-C instrument-coverage" LLVM_PROFILE_FILE="json5format-%m.profraw" cargo test --lib
       
-    - name: Measure coverage
+    - name: Gather results
       run: llvm-profdata merge -sparse json5format-*.profraw -o json5format.profdata
-         | llvm-cov report --use-color --ignore-filename-regex='/.cargo/registry' --instr-profile=json5format.profdata --object target/debug/deps/lib-*
+      
+    - name: Measure coverage
+      run: llvm-cov report --use-color --ignore-filename-regex='/.cargo/registry' --instr-profile=json5format.profdata --object target/debug/deps/lib-*
 
     - uses: codecov/codecov-action@v1
       with:
