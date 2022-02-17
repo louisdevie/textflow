@@ -35,7 +35,7 @@ jobs:
       
     - name: Measure coverage
       run: |
-        llvm-cov report $( \
+        llvm-cov export $( \
           for file in $( \
             RUSTFLAGS="-Z instrument-coverage" \
             cargo test --tests --no-run --message-format=json \
@@ -45,8 +45,10 @@ jobs:
             printf "%s %s " -object $file; \
           done \
         ) \
-        --instr-profile=json5format.profdata
+        --instr-profile=json5format.profdata \
+        --ignore-filename-regex=/.cargo/registry \
+        --format=lcov
         
-    - run: ls .
+    - run: ls -R .
 
     - uses: codecov/codecov-action@v1
