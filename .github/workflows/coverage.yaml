@@ -23,6 +23,7 @@ jobs:
       with:
         profile: minimal
         toolchain: nightly
+        override: true
         components: llvm-tools-preview
 
     # runs cargo with defaults flags, using the default `lcov` output
