@@ -6,7 +6,7 @@ use unicode_width::UnicodeWidthStr as UniW;
 /// Wraps and aligns text.
 ///
 /// `width_or_options` can either be an integer or [textwrap::Options],
-///  see the documentation of [`textwrap`]() for more information.
+///  see the documentation of `textwrap` for more information.
 ///
 /// There are four alignment modes :
 /// * `LEFT` doesn't modifiy the text, so it ends up left-aligned

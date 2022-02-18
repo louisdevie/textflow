@@ -1,3 +1,5 @@
+// behind the scene
+
 // divides `number` into `into` integer parts the most evenly possible
 pub fn split_evenly(number: usize, into: usize) -> Vec<usize> {
     // steps from 0 to `number`, separated by `number`/`into`
@@ -77,7 +79,7 @@ where
     }
 }
 
-// swaps two values in a vector
+// swap two values in a vector
 fn swap_2d_vec<T>(v: &mut Vec<Vec<T>>, pos1: (usize, usize), pos2: (usize, usize))
 where
     T: Default,

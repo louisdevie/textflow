@@ -10,11 +10,8 @@ license = "MIT"
 keywords = ["console", "terminal", "format", "align", "grid"]
 categories = ["command-line-interface"]
 
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-textwrap = "0.14"
-regex = "1"
-lazy_static = "1.4"
+textwrap = "~0.14"
+regex = "~1"
+lazy_static = "~1"
 unicode-width = ">=0.1.9"

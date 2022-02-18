@@ -6,9 +6,12 @@ use regex::Regex;
 
 /// Dynamic columns layout.
 pub struct Layout {
-    left: Vec<Col>,
-    fill: Option<Col>,
-    right: Vec<Col>,
+    // columns before the repeating one
+    left: Vec<DynCol>,
+    // the repeating column
+    fill: Option<DynCol>,
+    // columns after the repeating one
+    right: Vec<DynCol>,
 }
 
 // calculated layout column
@@ -26,7 +29,12 @@ impl Layout {
     ///
     /// # Example
     ///
-    /// TODO
+    /// ```
+    /// let my_layout = Layout::new()
+    ///     .fixed(4, RIGHT)
+    ///     .fractional(1, CENTER)
+    ///     .repeat();
+    /// ```
     pub fn new() -> Self {
         Self {
             left: Vec::new(),
@@ -39,29 +47,61 @@ impl Layout {
     ///
     /// Accept any number of columns, each one with a width
     /// of 1 fractional unit and aligned to the left.
+    /// 
+    /// Equivalent to the pattern `<-*`.
     pub fn default() -> Self {
         Self::new().fractional(1, crate::Alignment::LEFT).repeat()
     }
 
     /// Creates a layout from a pattern.
     ///
-    /// TODO
+    /// Returns the successfully built layout or an error message.
     ///
     /// # Pattern Syntax
     ///
-    /// TODO
+    /// Patterns describes columns separated by spaces.
+    /// 
+    /// Each column can be composed of :
+    /// * An alignment :
+    ///   * `<` for `LEFT`,
+    ///   * `^` for `CENTER`,
+    ///   * `>` for `RIGHT` or
+    ///   * `=` for `JUSTIFY`
     ///
-    /// # Examples
+    ///   (see [align()](crate::align::align) for more information).
+    ///   If it is not specified, it will default to `LEFT`.
+    /// * A width :
+    ///   * either an integer meaning a fixed width in characters
+    ///     (see [Layout::fixed()] for more information);
+    ///   * or one or more hyphens `-` meaning a dynamic width in fractional
+    ///     units, with the number of hyphens being the width
+    ///     (see [Layout::fractional()] for more information).
+    /// 
+    ///   If it is not specified, it will default to 1 fractional unit.
+    /// * A repeating flag: `*`, wich can only be used on one column
+    ///   (see [Layout::repeat()] for more information).
     ///
-    /// TODO
+    /// # Example
     ///
+    /// ```
+    /// Layout::from_pattern("^5 <-*").unwrap()
+    /// ```
+    /// can be read as “one column five characters wide followed by
+    /// zero, one or more columns with equal width”
+    /// and is equivalent to
+    /// ```
+    /// Layout::new()
+    ///     .fixed(5, Alignment::CENTER)
+    ///     .fractional(1, Alignment::LEFT).repeat()
+    /// ```
     pub fn from_pattern(pattern: &str) -> Result<Self, String> {
         lazy_static! {
             static ref RE_COLUMN: Regex = Regex::new(r"^([<^>=]?)(-*|\d*)(\*?)$").unwrap();
-            static ref RE_DASHES: Regex = Regex::new(r"^-+$").unwrap();
+            static ref RE_HYPHENS: Regex = Regex::new(r"^-+$").unwrap();
         }
 
         let mut parsed = Self::new();
+
         for column_pattern in pattern.split(" ") {
             match RE_COLUMN.captures(column_pattern) {
                 None => {
@@ -70,12 +110,14 @@ impl Layout {
                         column_pattern, pattern
                     ))
                 }
+
                 Some(groups) => {
                     if groups.get(0).unwrap().as_str().is_empty() {
-                        // skips multiple spaces
+                        // skip multiple spaces
                         continue;
                     }
 
+                    // alignment
                     let align = match groups.get(1).unwrap().as_str() {
                         "^" => crate::Alignment::CENTER,
                         ">" => crate::Alignment::RIGHT,
@@ -84,16 +126,18 @@ impl Layout {
                         &_ => crate::Alignment::LEFT,
                     };
 
+                    // width
                     let size = groups.get(2).unwrap().as_str();
                     if size.is_empty() {
                         // default column size is 1fr
                         parsed = parsed.fractional(1, align);
-                    } else if RE_DASHES.is_match(size) {
+                    } else if RE_HYPHENS.is_match(size) {
                         parsed = parsed.fractional(size.len(), align);
                     } else {
                         parsed = parsed.fixed(size.parse::<usize>().unwrap(), align);
                     }
 
+                    // repeat
                     if groups.get(3).unwrap().as_str() == "*" {
                         parsed = parsed.repeat();
                     }
@@ -103,15 +147,20 @@ impl Layout {
         return Ok(parsed);
     }
 
-    /// Add a fractional-sized column
+    /// Add a column with fractional size.
+    ///
+    /// The calculated width will be the width of
+    /// this column divided by the sum of the widths
+    /// of all the fractional columns (equivalent
+    /// to the `fr` unit in css).
     pub fn fractional(mut self, size: usize, alignment: Alignment) -> Self {
         match self.fill {
-            None => self.left.push(Col {
+            None => self.left.push(DynCol {
                 unit: ColWidthUnit::FRACTIONAL,
                 size,
                 align: alignment,
             }),
-            Some(_) => self.right.push(Col {
+            Some(_) => self.right.push(DynCol {
                 unit: ColWidthUnit::FRACTIONAL,
                 size,
                 align: alignment,
@@ -120,15 +169,17 @@ impl Layout {
         return self;
     }
 
-    /// Add an fixed-width column
+    /// Add a column with a fixed width in characters.
+    /// 
+    /// The calculated width will be exactly the same.
     pub fn fixed(mut self, size: usize, alignment: Alignment) -> Self {
         match self.fill {
-            None => self.left.push(Col {
+            None => self.left.push(DynCol {
                 unit: ColWidthUnit::CHARACTER,
                 size,
                 align: alignment,
             }),
-            Some(_) => self.right.push(Col {
+            Some(_) => self.right.push(DynCol {
                 unit: ColWidthUnit::CHARACTER,
                 size,
                 align: alignment,
@@ -138,6 +189,17 @@ impl Layout {
     }
 
     /// Set the last column of the layout as repeating
+    /// 
+    /// The repeating column can be removed or
+    /// duplicated any number of times to fit the
+    /// requested number of columns (it can be compared
+    /// to the `*` repetition in regular expressions)
+    /// 
+    /// Only one column can be repeated. **This function
+    /// will panic if it is called on a layout that
+    /// already has a repeating column**.
+    /// A `try_repeat` function may be added in a future
+    /// version if needed.
     pub fn repeat(mut self) -> Self {
         match self.fill {
             None => self.fill = Some(self.left.pop().expect("No column to repeat")),
@@ -147,7 +209,7 @@ impl Layout {
     }
 
     /// Calculate all the dynamic columns for a given width
-    /// and number of columns
+    /// and number of columns.
     pub fn resolve(&self, width: usize, columns: usize) -> Result<Vec<Column>, String> {
         let missing = columns as i32 - self.left.len() as i32 - self.right.len() as i32;
 
@@ -222,7 +284,7 @@ impl Layout {
     }
 }
 
-struct Col {
+struct DynCol {
     size: usize,
     unit: ColWidthUnit,
     align: Alignment,

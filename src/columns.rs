@@ -4,6 +4,46 @@ use crate::Layout;
 use crate::Spacing;
 
 /// Wraps and aligns text within columns.
+/// 
+/// `content` may be an array or a vector of strings.
+/// The number of columns is the number of strings,
+/// not based on the layout.
+///
+/// `width_or_options` can either be an integer or [textwrap::Options],
+/// see the documentation of `textwrap` for more information.
+/// (Note that the options `break_word` and `word_splitter` are overriden
+/// to `true` and `textwrap::word_splitters::HyphenSplitter` respectively.)
+/// 
+/// There are three spacing modes :
+/// * `BETWEEN` add margins bewteen the columns
+/// * `AROUND` add margins between and around the columns
+/// * `NONE` doesn't add any margins
+/// 
+/// # Examples
+/// 
+/// ```
+/// use textflow::columns;
+/// use textflow::Layout;
+/// use textflow::Spacing;
+/// 
+/// fn main() {
+///     let text = [
+///         "I am aligned to the left.",
+///         "I am aligned to the right and take two times more space.",
+///     ];
+///     let layout = Layout::from_pattern("<- >--").unwrap();
+///     println!("{}", columns(text, Spacing::BETWEEN, layout, 31));
+/// }
+/// ```
+/// should display
+/// ```
+/// I am        I am aligned to the
+/// aligned to   right and take two
+/// the left.     times more space.
+/// ```
+/// 
+/// [Another example](https://github.com/louisdevie/textflow/blob/main/examples/columns.rs)
+/// is included in the crate.
 pub fn columns<
     'a,
     StringsCollection,
