@@ -151,7 +151,7 @@ impl Layout {
     ///
     /// The calculated width will be the width of
     /// this column divided by the sum of the widths
-    /// of all the fractional columns (equivalent
+    /// of all the fractional columns (similar
     /// to the `fr` unit in css).
     pub fn fractional(mut self, size: usize, alignment: Alignment) -> Self {
         match self.fill {
