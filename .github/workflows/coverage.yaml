@@ -1,0 +1,56 @@
+name: Rust
+
+on:
+  push:
+    branches: [ main, codecov-setup ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  run:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: nightly
+        override: true
+        components: llvm-tools-preview
+        
+    - name: Set up path
+      run: echo "/home/runner/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/bin" >> $GITHUB_PATH
+
+    - name: Run tests
+      run: RUSTFLAGS="-C instrument-coverage" LLVM_PROFILE_FILE="json5format-%m.profraw" cargo test --lib
+      
+    - name: Gather results
+      run: llvm-profdata merge -sparse json5format-*.profraw -o json5format.profdata
+      
+    - name: Measure coverage
+      run: |
+        llvm-cov export $( \
+          for file in $( \
+            RUSTFLAGS="-Z instrument-coverage" \
+            cargo test --tests --no-run --message-format=json \
+              | jq -r "select(.profile.test == true) | .filenames[]" \
+              | grep -v dSYM - \
+          ); do \
+            printf "%s %s " -object $file; \
+          done \
+        ) \
+        --instr-profile=json5format.profdata \
+        --ignore-filename-regex=/.cargo/registry \
+        --format=lcov > coverage.lcov
+        
+    - run: ls -R .
+
+    - uses: codecov/codecov-action@v1
+      with:
+        files: coverage.lcov
