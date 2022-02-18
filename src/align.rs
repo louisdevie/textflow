@@ -1,9 +1,12 @@
-extern crate textwrap;
+use crate::utils::*;
 
-/// Wraps and align the given `text`.
+use crate::Alignment;
+use unicode_width::UnicodeWidthStr as UniW;
+
+/// Wraps and aligns text.
 ///
 /// `width_or_options` can either be an integer or [textwrap::Options],
-///  see `textwrap`'s documentation for more information.
+///  see the documentation of `textwrap` for more information.
 ///
 /// There are four alignment modes :
 /// * `LEFT` doesn't modifiy the text, so it ends up left-aligned
@@ -35,7 +38,7 @@ extern crate textwrap;
 /// The crate also contains [an example](https://github.com/louisdevie/textflow/blob/main/examples/alignment.rs).
 pub fn align<'a, TextwrapAlgo, TextwrapWordSep, TextwrapWordSplit, TextwrapOptions>(
     text: &str,
-    alignment: super::Alignment,
+    alignment: Alignment,
     width_or_options: TextwrapOptions,
 ) -> String
 where
@@ -46,7 +49,8 @@ where
 {
     let options = width_or_options.into();
 
-    // copy the width before passing the options to `wrap`
+    // copy the width before passing the options
+    // to `wrap` because it consumes it
     let width = options.width;
 
     let wrapped = textwrap::wrap(text, options);
@@ -54,59 +58,64 @@ where
     let mut wrapped_and_aligned = String::new();
 
     for (i, line) in wrapped.iter().enumerate() {
-        if i != 0 {
+        let last_line = i == wrapped.len() - 1;
+        wrapped_and_aligned.push_str(&align_line(line, width, alignment, last_line));
+        // no line feed at the end
+        if !last_line {
             wrapped_and_aligned.push('\n');
         }
-        wrapped_and_aligned.push_str(&align_line(line, width, alignment, i == wrapped.len() - 1));
     }
 
     return wrapped_and_aligned;
 }
 
-fn align_line(line: &str, width: usize, alignment: super::Alignment, last: bool) -> String {
-    let remaining = width - line.len();
+// real deal
+pub fn align_line(line: &str, width: usize, alignment: Alignment, last: bool) -> String {
+    let remaining = width - UniW::width(line);
 
     match alignment {
-        super::Alignment::LEFT => String::from(line),
+        // pad at the end (useful for `columns`)
+        Alignment::LEFT => String::from(line) + &" ".repeat(remaining),
 
-        super::Alignment::RIGHT => " ".repeat(remaining) + line,
+        // pad at the start
+        Alignment::RIGHT => " ".repeat(remaining) + line,
 
-        super::Alignment::CENTER => " ".repeat(remaining / 2) + line,
+        // pad each side (again, the padding at the end is useful for `columns`)
+        Alignment::CENTER => {
+            let before = remaining / 2;
+            " ".repeat(before) + line + &" ".repeat(remaining - before)
+        }
 
-        super::Alignment::JUSTIFY => {
-            if !last {
+        // now onto the complicated stuff
+        Alignment::JUSTIFY => {
+            if last {
+                // the last line doesn't get justified
+                String::from(line) + &" ".repeat(remaining)
+            } else {
                 let mut words: Vec<&str> = line.split(" ").collect();
+                // distribute spaces
                 let spaces = split_evenly(words.len() + remaining - 1, words.len() - 1);
 
-                // `remove(0)` panics if the vector is empty
+                // the first word is treated separately
                 let mut aligned = if words.len() != 0 {
+                    // `remove(0)` will panics if the vector is empty ...
                     String::from(words.remove(0))
                 } else {
+                    // ... it means the line is empty so we return an empty string
                     String::new()
                 };
-                for (word, spacing) in words.iter().zip(spaces) {
-                    aligned.push_str(&" ".repeat(spacing));
-                    aligned.push_str(word);
+                if words.len() == 0 {
+                    // only one word
+                    aligned.push_str(&" ".repeat(remaining));
+                } else {
+                    for (word, spacing) in words.iter().zip(spaces) {
+                        aligned.push_str(&" ".repeat(spacing));
+                        aligned.push_str(word);
+                    }
                 }
 
                 aligned
-            } else {
-                String::from(line)
             }
         }
     }
-}
-
-fn split_evenly(number: usize, into: usize) -> Vec<usize> {
-    let mut steps: Vec<usize> = Vec::new();
-    for i in 0..(into + 1) {
-        steps.push((i as f32 * (number as f32 / into as f32)).round() as usize);
-    }
-
-    let mut deltas = Vec::new();
-    for i in 0..into {
-        deltas.push(steps[i + 1] - steps[i]);
-    }
-
-    return deltas;
 }
