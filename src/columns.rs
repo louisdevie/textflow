@@ -4,7 +4,7 @@ use crate::Layout;
 use crate::Spacing;
 
 /// Wraps and aligns text within columns.
-/// 
+///
 /// `content` may be an array or a vector of strings.
 /// The number of columns is the number of strings,
 /// not based on the layout.
@@ -13,19 +13,19 @@ use crate::Spacing;
 /// see the documentation of `textwrap` for more information.
 /// (Note that the options `break_word` and `word_splitter` are overriden
 /// to `true` and `textwrap::word_splitters::HyphenSplitter` respectively.)
-/// 
+///
 /// There are three spacing modes :
 /// * `BETWEEN` add margins bewteen the columns
 /// * `AROUND` add margins between and around the columns
 /// * `NONE` doesn't add any margins
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```
 /// use textflow::columns;
 /// use textflow::Layout;
 /// use textflow::Spacing;
-/// 
+///
 /// fn main() {
 ///     let text = [
 ///         "I am aligned to the left.",
@@ -41,7 +41,7 @@ use crate::Spacing;
 /// aligned to   right and take two
 /// the left.     times more space.
 /// ```
-/// 
+///
 /// [Another example](https://github.com/louisdevie/textflow/blob/main/examples/columns.rs)
 /// is included in the crate.
 pub fn columns<
@@ -61,7 +61,7 @@ where
     StringsCollection: IntoIterator<Item = &'a str>,
     TextwrapAlgo: textwrap::wrap_algorithms::WrapAlgorithm + Clone,
     TextwrapWordSep: textwrap::word_separators::WordSeparator + Clone,
-    TextwrapWordSplit: textwrap::word_splitters::WordSplitter,
+    TextwrapWordSplit: textwrap::word_splitters::WordSplitter + Clone,
     TextwrapOptions: Into<textwrap::Options<'a, TextwrapAlgo, TextwrapWordSep, TextwrapWordSplit>>,
 {
     let options = width_or_options.into();
