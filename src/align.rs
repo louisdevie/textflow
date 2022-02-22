@@ -119,3 +119,83 @@ pub fn align_line(line: &str, width: usize, alignment: Alignment, last: bool) ->
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_align_line() {
+        // left alignment
+        assert_eq!(
+            align_line("even", 10, Alignment::LEFT, false),
+            String::from("even      ")
+        );
+
+        // right alignment
+        assert_eq!(
+            align_line("even", 10, Alignment::RIGHT, false),
+            String::from("      even")
+        );
+
+        // center with an even number of characters left
+        assert_eq!(
+            align_line("even", 10, Alignment::CENTER, false),
+            String::from("   even   ")
+        );
+        // center with an odd number of characters left
+        assert_eq!(
+            align_line("odd", 10, Alignment::CENTER, false),
+            String::from("   odd    ")
+        );
+
+        // justified
+        assert_eq!(
+            align_line("even odd odd even", 19, Alignment::JUSTIFY, false),
+            String::from("even  odd odd  even")
+        );
+        // last line justified
+        assert_eq!(
+            align_line("even odd odd even", 19, Alignment::LEFT, true),
+            String::from("even odd odd even  ")
+        );
+        // one word justified
+        assert_eq!(
+            align_line("even", 19, Alignment::LEFT, false),
+            String::from("even               ")
+        );
+
+        // empty lines
+        assert_eq!(
+            align_line("", 10, Alignment::LEFT, false),
+            String::from("          ")
+        );
+        assert_eq!(
+            align_line("", 10, Alignment::RIGHT, false),
+            String::from("          ")
+        );
+        assert_eq!(
+            align_line("", 10, Alignment::CENTER, false),
+            String::from("          ")
+        );
+        assert_eq!(
+            align_line("", 10, Alignment::JUSTIFY, false),
+            String::from("          ")
+        );
+        assert_eq!(
+            align_line("", 10, Alignment::JUSTIFY, true),
+            String::from("          ")
+        );
+    }
+
+    #[test]
+    fn test_align() {
+        // the doctest
+        let text = "textflow:\na small extension for textwrap.";
+
+        let expected =
+            String::from("     textflow:      \n a small extension  \n   for textwrap.    ");
+
+        assert_eq!(align(text, Alignment::CENTER, 20), expected);
+    }
+}

@@ -116,3 +116,18 @@ where
 
     return formatted;
 }
+
+#[test]
+fn test_columns() {
+    // the doctest
+    let text = [
+        "I am aligned to the left.",
+        "I am aligned to the right and take two times more space.",
+    ];
+
+    let layout = Layout::from_pattern("<- >--").unwrap();
+
+    let expected = String::from("I am        I am aligned to the\naligned to   right and take two\nthe left.     times more space.");
+
+    assert_eq!(columns(text, Spacing::BETWEEN, layout, 31), expected);
+}

@@ -335,7 +335,7 @@ mod tests {
 
     #[test]
     fn test_from_pattern() {
-        let valid1 = Layout::from_pattern("^7 - 3* =-").unwrap();
+        let valid1 = Layout::from_pattern("^7 - 3* =").unwrap();
 
         assert_eq!(
             valid1.left,
@@ -369,7 +369,7 @@ mod tests {
             }]
         );
 
-        let valid2 = Layout::from_pattern(">- <-- =---").unwrap();
+        let valid2 = Layout::from_pattern(">-  <--  =---").unwrap();
 
         assert_eq!(
             valid2.left,
@@ -547,7 +547,7 @@ mod tests {
         // not enough columns
         assert!(generic.resolve(23, 0).is_err());
 
-        let fixed_only = Layout::from_pattern(">5 10*").unwrap();
+        let fixed_only = Layout::from_pattern(">5 10* 15").unwrap();
 
         // will always be the same size
         assert_eq!(
@@ -562,7 +562,7 @@ mod tests {
                     alignment: Alignment::LEFT
                 },
                 Column {
-                    width: 10,
+                    width: 15,
                     alignment: Alignment::LEFT
                 }
             ])
@@ -579,7 +579,7 @@ mod tests {
                     alignment: Alignment::LEFT
                 },
                 Column {
-                    width: 10,
+                    width: 15,
                     alignment: Alignment::LEFT
                 }
             ])
