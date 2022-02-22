@@ -11,7 +11,7 @@ keywords = ["console", "terminal", "format", "align", "grid"]
 categories = ["command-line-interface"]
 
 [dependencies]
-textwrap = "0.14"
+textwrap = "=0.14"
 regex = "~1"
 lazy_static = "~1"
 unicode-width = ">=0.1.9"
