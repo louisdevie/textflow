@@ -32,7 +32,7 @@ use crate::Spacing;
 ///         "I am aligned to the right and take two times more space.",
 ///     ];
 ///     let layout = Layout::from_pattern("<- >--").unwrap();
-///     println!("{}", columns(text, Spacing::BETWEEN, layout, 31));
+///     println!("{}", columns(text, Spacing::BETWEEN, &layout, 31));
 /// }
 /// ```
 /// should display
@@ -54,7 +54,7 @@ pub fn columns<
 >(
     content: StringsCollection,
     spacing: Spacing,
-    layout: Layout,
+    layout: &Layout,
     width_or_options: TextwrapOptions,
 ) -> String
 where
@@ -127,7 +127,15 @@ fn test_columns() {
 
     let layout = Layout::from_pattern("<- >--").unwrap();
 
-    let expected = String::from("I am        I am aligned to the\naligned to   right and take two\nthe left.     times more space.");
+    let expected_none = String::from("I am       I am aligned to the\naligned to  right and take two\nthe left.    times more space.");
+    let expected_between = String::from("I am        I am aligned to the\naligned to   right and take two\nthe left.     times more space.");
+    // note that `Spacing::AROUND` leaves the end of the line empty (because laziness)
+    let expected_around = String::from(" I am        I am aligned to the\n aligned to   right and take two\n the left.     times more space.");
 
-    assert_eq!(columns(text, Spacing::BETWEEN, layout, 31), expected);
+    assert_eq!(columns(text, Spacing::NONE, &layout, 30), expected_none);
+    assert_eq!(
+        columns(text, Spacing::BETWEEN, &layout, 31),
+        expected_between
+    );
+    assert_eq!(columns(text, Spacing::AROUND, &layout, 33), expected_around);
 }

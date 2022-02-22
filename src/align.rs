@@ -156,13 +156,18 @@ mod tests {
         );
         // last line justified
         assert_eq!(
-            align_line("even odd odd even", 19, Alignment::LEFT, true),
+            align_line("even odd odd even", 19, Alignment::JUSTIFY, true),
             String::from("even odd odd even  ")
         );
         // one word justified
         assert_eq!(
-            align_line("even", 19, Alignment::LEFT, false),
+            align_line("even", 19, Alignment::JUSTIFY, false),
             String::from("even               ")
+        );
+        // empty line justified
+        assert_eq!(
+            align_line("", 19, Alignment::JUSTIFY, false),
+            String::from("                   ")
         );
 
         // empty lines

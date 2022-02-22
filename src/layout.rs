@@ -5,6 +5,10 @@ use lazy_static::lazy_static;
 use regex::Regex;
 
 /// Dynamic columns layout.
+///
+/// Layouts can support a variable number of columns
+/// (see [`Layout::repeat`]) and have columns with dynamic
+/// size (see [`Layout::fractioanl`]).
 pub struct Layout {
     // columns before the repeating one
     left: Vec<DynCol>,
