@@ -164,6 +164,11 @@ mod tests {
             align_line("even", 19, Alignment::LEFT, false),
             String::from("even               ")
         );
+        // empty line justified
+        assert_eq!(
+            align_line("", 19, Alignment::LEFT, false),
+            String::from("                   ")
+        );
 
         // empty lines
         assert_eq!(
