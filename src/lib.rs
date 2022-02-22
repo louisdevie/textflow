@@ -23,7 +23,7 @@ pub use columns::columns;
 pub use layout::Layout;
 
 /// Text alignment. See [align()] for details.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Alignment {
     /// Left-aligned
     LEFT,
