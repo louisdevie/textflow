@@ -12,6 +12,7 @@ extern crate unicode_width;
 /// (re-exported from `textwrap`) Holds settings for wrapping and filling text.
 pub use textwrap::Options;
 
+mod content;
 mod utils;
 
 mod align;

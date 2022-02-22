@@ -15,3 +15,7 @@ textwrap = "=0.14"
 regex = "~1"
 lazy_static = "~1"
 unicode-width = ">=0.1.9"
+console = { version = "^0.15", optional = true }
+
+[features]
+console-style = ["console"]

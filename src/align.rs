@@ -1,5 +1,6 @@
 use crate::utils::*;
 
+use crate::content;
 use crate::Alignment;
 use unicode_width::UnicodeWidthStr as UniW;
 
@@ -36,18 +37,24 @@ use unicode_width::UnicodeWidthStr as UniW;
 /// ```
 ///
 /// The crate also contains [an example](https://github.com/louisdevie/textflow/blob/main/examples/alignment.rs).
-pub fn align<'a, TextwrapAlgo, TextwrapWordSep, TextwrapWordSplit, TextwrapOptions>(
-    text: &str,
+pub fn align<'a, Content, TextwrapAlgo, TextwrapWordSep, TextwrapWordSplit, TextwrapOptions>(
+    text: Content,
     alignment: Alignment,
     width_or_options: TextwrapOptions,
 ) -> String
 where
+    Content: Into<content::Content<'static>>,
     TextwrapAlgo: textwrap::wrap_algorithms::WrapAlgorithm,
     TextwrapWordSep: textwrap::word_separators::WordSeparator,
     TextwrapWordSplit: textwrap::word_splitters::WordSplitter,
     TextwrapOptions: Into<textwrap::Options<'a, TextwrapAlgo, TextwrapWordSep, TextwrapWordSplit>>,
 {
     let options = width_or_options.into();
+
+    #[cfg(feature = "console-style")]
+    let (text, style) = text.into().extract();
+    #[cfg(not(feature = "console-style"))]
+    let text = text.into().extract();
 
     // copy the width before passing the options
     // to `wrap` because it consumes it
@@ -59,7 +66,12 @@ where
 
     for (i, line) in wrapped.iter().enumerate() {
         let last_line = i == wrapped.len() - 1;
+
+        #[cfg(feature = "console-style")]
+        wrapped_and_aligned.push_str(style.apply_to(align_line(line, width, alignment, last_line)));
+        #[cfg(not(feature = "console-style"))]
         wrapped_and_aligned.push_str(&align_line(line, width, alignment, last_line));
+
         // no line feed at the end
         if !last_line {
             wrapped_and_aligned.push('\n');
@@ -97,13 +109,7 @@ pub fn align_line(line: &str, width: usize, alignment: Alignment, last: bool) ->
                 let spaces = split_evenly(words.len() + remaining - 1, words.len() - 1);
 
                 // the first word is treated separately
-                let mut aligned = if words.len() != 0 {
-                    // `remove(0)` will panics if the vector is empty ...
-                    String::from(words.remove(0))
-                } else {
-                    // ... it means the line is empty so we return an empty string
-                    String::new()
-                };
+                let mut aligned = String::from(words.remove(0));
                 if words.len() == 0 {
                     // only one word
                     aligned.push_str(&" ".repeat(remaining));
