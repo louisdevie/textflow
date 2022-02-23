@@ -9,18 +9,36 @@ extern crate regex;
 extern crate textwrap;
 extern crate unicode_width;
 
+#[cfg(feature = "styling")]
+extern crate perroquet;
+
 /// (re-exported from `textwrap`) Holds settings for wrapping and filling text.
 pub use textwrap::Options;
 
-mod content;
 mod utils;
 
+#[cfg(not(feature = "styling"))]
 mod align;
+#[cfg(feature = "styling")]
+mod align_rich;
+
+#[cfg(not(feature = "styling"))]
 mod columns;
+//#[cfg(feature = "styling")]
+//mod columns_rich;
+
 mod layout;
 
+#[cfg(not(feature = "styling"))]
 pub use align::align;
+#[cfg(feature = "styling")]
+pub use align_rich::align;
+
+#[cfg(not(feature = "styling"))]
 pub use columns::columns;
+//#[cfg(feature = "styling")]
+//pub use columns_rich::columns;
+
 pub use layout::Layout;
 
 /// Text alignment. See [align()] for details.

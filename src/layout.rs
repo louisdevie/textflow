@@ -8,7 +8,7 @@ use regex::Regex;
 ///
 /// Layouts can support a variable number of columns
 /// (see [`Layout::repeat`]) and have columns with dynamic
-/// size (see [`Layout::fractioanl`]).
+/// size (see [`Layout::fractional`]).
 pub struct Layout {
     // columns before the repeating one
     left: Vec<DynCol>,
