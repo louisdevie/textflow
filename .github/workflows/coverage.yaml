@@ -28,7 +28,9 @@ jobs:
       run: echo "/home/runner/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/x86_64-unknown-linux-gnu/bin" >> $GITHUB_PATH
 
     - name: Run tests
-      run: RUSTFLAGS="-C instrument-coverage" LLVM_PROFILE_FILE="json5format-%m.profraw" cargo test --lib
+      run: |
+        RUSTFLAGS="-C instrument-coverage" LLVM_PROFILE_FILE="json5format-%m.profraw" cargo test --lib
+        RUSTFLAGS="-C instrument-coverage" cargo test --lib --no-run --message-format=json > file_list.txt
       
     - name: Gather results
       run: llvm-profdata merge -sparse json5format-*.profraw -o json5format.profdata
@@ -37,10 +39,7 @@ jobs:
       run: |
         llvm-cov export $( \
           for file in $( \
-            RUSTFLAGS="-Z instrument-coverage" \
-            cargo test --tests --no-run --message-format=json \
-              | jq -r "select(.profile.test == true) | .filenames[]" \
-              | grep -v dSYM - \
+             cat file_list.txt | jq -r "select(.profile.test == true) | .filenames[]" | grep -v dSYM - \
           ); do \
             printf "%s %s " -object $file; \
           done \
@@ -48,8 +47,6 @@ jobs:
         --instr-profile=json5format.profdata \
         --ignore-filename-regex=/.cargo/registry \
         --format=lcov > coverage.lcov
-        
-    - run: ls -R .
 
     - uses: codecov/codecov-action@v1
       with:
