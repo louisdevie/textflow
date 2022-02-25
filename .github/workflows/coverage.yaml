@@ -29,8 +29,10 @@ jobs:
 
     - name: Run tests
       run: |
-        RUSTFLAGS="-C instrument-coverage" LLVM_PROFILE_FILE="json5format-%m.profraw" cargo test --lib
+        RUSTFLAGS="-C instrument-coverage" LLVM_PROFILE_FILE="json5format-0%m.profraw" cargo test --lib
+        RUSTFLAGS="-C instrument-coverage" LLVM_PROFILE_FILE="json5format-1%m.profraw" cargo test --lib --features styling
         RUSTFLAGS="-C instrument-coverage" cargo test --lib --no-run --message-format=json > file_list.txt
+        RUSTFLAGS="-C instrument-coverage" cargo test --lib --features styling --no-run --message-format=json >> file_list.txt
       
     - name: Gather results
       run: llvm-profdata merge -sparse json5format-*.profraw -o json5format.profdata
