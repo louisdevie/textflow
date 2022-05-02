@@ -1,6 +1,9 @@
 use crate::utils::*;
 use crate::Alignment;
 
+use perroquet::style;
+use perroquet::RichString;
+
 use unicode_width::UnicodeWidthStr as UniW;
 
 /// Wraps and aligns text.
@@ -36,35 +39,45 @@ use unicode_width::UnicodeWidthStr as UniW;
 /// ```
 ///
 /// The crate also contains [an example](https://github.com/louisdevie/textflow/blob/main/examples/alignment.rs).
-pub fn align<'a, TextwrapAlgo, TextwrapWordSep, TextwrapWordSplit, TextwrapOptions>(
-    text: &str,
+pub fn align<'a, Content, TextwrapAlgo, TextwrapWordSep, TextwrapWordSplit, TextwrapOptions>(
+    text: Content,
     alignment: Alignment,
     width_or_options: TextwrapOptions,
-) -> String
+) -> RichString
 where
+    Content: Into<RichString>,
     TextwrapAlgo: textwrap::wrap_algorithms::WrapAlgorithm,
     TextwrapWordSep: textwrap::word_separators::WordSeparator,
     TextwrapWordSplit: textwrap::word_splitters::WordSplitter,
     TextwrapOptions: Into<textwrap::Options<'a, TextwrapAlgo, TextwrapWordSep, TextwrapWordSplit>>,
 {
     let options = width_or_options.into();
+    let text = text.into();
 
     // copy the width before passing the options
     // to `wrap` because it consumes it
     let width = options.width;
 
-    let wrapped = textwrap::wrap(text, options);
+    let wrapped = textwrap::wrap(text.raw(), options);
 
-    let mut wrapped_and_aligned = String::new();
+    let mut wrapped_and_aligned = RichString::new();
 
+    let mut cursor = 0;
     for (i, line) in wrapped.iter().enumerate() {
         let last_line = i == wrapped.len() - 1;
 
-        wrapped_and_aligned.push_str(&align_line(line, width, alignment, last_line));
+        wrapped_and_aligned.push(&align_line(
+            text.substring(cursor, cursor + line.len()),
+            width,
+            alignment,
+            last_line,
+        ));
+
+        cursor = cursor + line.len();
 
         // no line feed at the end
         if !last_line {
-            wrapped_and_aligned.push('\n');
+            wrapped_and_aligned.push_extend("\n");
         }
     }
 
@@ -72,46 +85,58 @@ where
 }
 
 // real deal
-pub fn align_line(line: &str, width: usize, alignment: Alignment, last: bool) -> String {
-    let remaining = width - UniW::width(line);
+pub fn align_line(
+    mut line: RichString,
+    width: usize,
+    alignment: Alignment,
+    last: bool,
+) -> RichString {
+    let remaining = width - UniW::width(line.raw());
 
     match alignment {
         // pad at the end (useful for `columns`)
-        Alignment::LEFT => String::from(line) + &" ".repeat(remaining),
+        Alignment::LEFT => {
+            line.push_plain(&" ".repeat(remaining));
+            return line;
+        }
 
         // pad at the start
-        Alignment::RIGHT => " ".repeat(remaining) + line,
+        Alignment::RIGHT => {
+            line.insert_plain(0, &" ".repeat(remaining));
+            return line;
+        }
 
         // pad each side (again, the padding at the end is useful for `columns`)
         Alignment::CENTER => {
             let before = remaining / 2;
-            " ".repeat(before) + line + &" ".repeat(remaining - before)
+            line.insert_plain(0, &" ".repeat(before));
+            line.push_plain(&" ".repeat(remaining - before));
+            return line;
         }
 
         // now onto the complicated stuff
         Alignment::JUSTIFY => {
             if last {
                 // the last line doesn't get justified
-                String::from(line) + &" ".repeat(remaining)
+                line.push_plain(&" ".repeat(remaining));
             } else {
-                let mut words: Vec<&str> = line.split(" ").collect();
+                let mut words: Vec<RichString> = line.split(" ");
                 // distribute spaces
                 let spaces = split_evenly(words.len() + remaining - 1, words.len() - 1);
 
                 // the first word is treated separately
-                let mut aligned = String::from(words.remove(0));
+                line = words.remove(0);
                 if words.len() == 0 {
                     // only one word
-                    aligned.push_str(&" ".repeat(remaining));
+                    line.push_plain(&" ".repeat(remaining));
                 } else {
                     for (word, spacing) in words.iter().zip(spaces) {
-                        aligned.push_str(&" ".repeat(spacing));
-                        aligned.push_str(word);
+                        line.push_plain(&" ".repeat(spacing));
+                        line.push(word);
                     }
                 }
-
-                aligned
             }
+            return line;
         }
     }
 }
@@ -124,68 +149,68 @@ mod tests {
     fn test_align_line() {
         // left alignment
         assert_eq!(
-            align_line("even", 10, Alignment::LEFT, false),
-            String::from("even      ")
+            align_line(style!("even"), 10, Alignment::LEFT, false),
+            style!("even      ")
         );
 
         // right alignment
         assert_eq!(
-            align_line("even", 10, Alignment::RIGHT, false),
-            String::from("      even")
+            align_line(style!("even"), 10, Alignment::RIGHT, false),
+            style!("      even")
         );
 
         // center with an even number of characters left
         assert_eq!(
-            align_line("even", 10, Alignment::CENTER, false),
-            String::from("   even   ")
+            align_line(style!("even"), 10, Alignment::CENTER, false),
+            style!("   even   ")
         );
         // center with an odd number of characters left
         assert_eq!(
-            align_line("odd", 10, Alignment::CENTER, false),
-            String::from("   odd    ")
+            align_line(style!("odd"), 10, Alignment::CENTER, false),
+            style!("   odd    ")
         );
 
         // justified
         assert_eq!(
-            align_line("even odd odd even", 19, Alignment::JUSTIFY, false),
-            String::from("even  odd odd  even")
+            align_line(style!("even odd odd even"), 19, Alignment::JUSTIFY, false),
+            style!("even  odd odd  even")
         );
         // last line justified
         assert_eq!(
-            align_line("even odd odd even", 19, Alignment::JUSTIFY, true),
-            String::from("even odd odd even  ")
+            align_line(style!("even odd odd even"), 19, Alignment::JUSTIFY, true),
+            style!("even odd odd even  ")
         );
         // one word justified
         assert_eq!(
-            align_line("even", 19, Alignment::JUSTIFY, false),
-            String::from("even               ")
+            align_line(style!("even"), 19, Alignment::JUSTIFY, false),
+            style!("even               ")
         );
         // empty line justified
         assert_eq!(
-            align_line("", 19, Alignment::JUSTIFY, false),
-            String::from("                   ")
+            align_line(style!(""), 19, Alignment::JUSTIFY, false),
+            style!("                   ")
         );
 
         // empty lines
         assert_eq!(
-            align_line("", 10, Alignment::LEFT, false),
-            String::from("          ")
+            align_line(style!(""), 10, Alignment::LEFT, false),
+            style!("          ")
         );
         assert_eq!(
-            align_line("", 10, Alignment::RIGHT, false),
-            String::from("          ")
+            align_line(style!(""), 10, Alignment::RIGHT, false),
+            style!("          ")
         );
         assert_eq!(
-            align_line("", 10, Alignment::CENTER, false),
-            String::from("          ")
+            align_line(style!(""), 10, Alignment::CENTER, false),
+            style!("          ")
         );
         assert_eq!(
-            align_line("", 10, Alignment::JUSTIFY, false),
-            String::from("          ")
+            align_line(style!(""), 10, Alignment::JUSTIFY, false),
+            style!("          ")
         );
         assert_eq!(
-            align_line("", 10, Alignment::JUSTIFY, true),
-            String::from("          ")
+            align_line(style!(""), 10, Alignment::JUSTIFY, true),
+            style!("          ")
         );
     }
 
@@ -194,8 +219,7 @@ mod tests {
         // the doctest
         let text = "textflow:\na small extension for textwrap.";
 
-        let expected =
-            String::from("     textflow:      \n a small extension  \n   for textwrap.    ");
+        let expected = style!("     textflow:      \n a small extension  \n   for textwrap.    ");
 
         assert_eq!(align(text, Alignment::CENTER, 20), expected);
     }
